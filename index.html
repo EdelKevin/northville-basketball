@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>25-26 Northville Basketball</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --pistons-blue: #006BB6;
+    --pistons-red: #ED174C;
+    --pistons-gold: #BFA77D;
+    --pistons-dark: #0a0f1e;
+    --pistons-darker: #060b18;
+    --pistons-panel: #0d1428;
+    --pistons-card: #111c36;
+    --pistons-border: #1e3060;
+    --text-bright: #f0f4ff;
+    --text-mid: #8ba3cc;
+    --text-dim: #445577;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--pistons-darker);
+    color: var(--text-bright);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, var(--pistons-blue) 0%, #004a8f 50%, var(--pistons-dark) 100%);
+    position: relative; overflow: hidden;
+  }
+  .header::before {
+    content:''; position:absolute; top:-40px; right:-40px;
+    width:200px; height:200px; background:var(--pistons-red);
+    border-radius:50%; opacity:.12;
+  }
+  .header::after {
+    content:''; position:absolute; bottom:-20px; left:10%;
+    width:120px; height:120px; background:var(--pistons-gold);
+    border-radius:50%; opacity:.08;
+  }
+  .header-inner { position:relative; z-index:1; padding:20px 16px 16px; }
+  .header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+  .team-name { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:2px; line-height:1; color:#fff; }
+  .team-name span { display:block; font-size:13px; font-family:'Barlow Condensed',sans-serif; font-weight:600; letter-spacing:3px; color:var(--pistons-gold); text-transform:uppercase; }
+  .admin-btn {
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25);
+    color:#fff; padding:6px 12px; border-radius:20px; font-size:12px;
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; letter-spacing:1px;
+    cursor:pointer; transition:all .2s; backdrop-filter:blur(4px);
+  }
+  .admin-btn:hover,.admin-btn.active { background:var(--pistons-red); border-color:var(--pistons-red); }
+
+  /* next game */
+  .next-game {
+    background:rgba(0,0,0,.3); border:1px solid rgba(191,167,125,.3);
+    border-radius:10px; padding:10px 14px;
+    display:flex; align-items:center; gap:12px; backdrop-filter:blur(8px);
+  }
+  .next-game-dot {
+    width:10px; height:10px; background:#4ade80; border-radius:50%;
+    box-shadow:0 0 8px #4ade80; flex-shrink:0; animation:pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+  .next-game-text { font-family:'Barlow Condensed',sans-serif; font-size:13px; letter-spacing:.5px; color:rgba(255,255,255,.9); }
+  .next-game-text strong { color:#4ade80; font-size:15px; }
+  .next-game-time { margin-left:auto; font-family:'Barlow Condensed',sans-serif; font-size:12px; color:var(--pistons-gold); font-weight:600; letter-spacing:.5px; white-space:nowrap; }
+
+  /* sync status */
+  .sync-bar {
+    background:var(--pistons-darker); padding:4px 16px;
+    display:flex; align-items:center; gap:6px;
+    font-size:11px; color:var(--text-dim); font-family:'Barlow Condensed',sans-serif;
+    border-bottom:1px solid var(--pistons-border);
+    min-height:22px;
+  }
+  .sync-dot { width:6px; height:6px; border-radius:50%; background:var(--text-dim); flex-shrink:0; }
+  .sync-dot.ok { background:#4ade80; }
+  .sync-dot.err { background:var(--pistons-red); }
+  .sync-dot.loading { background:var(--pistons-gold); animation:pulse 1s infinite; }
+
+  /* month nav */
+  .month-nav {
+    background:var(--pistons-panel); border-bottom:2px solid var(--pistons-border);
+    padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:10;
+  }
+  .month-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; }
+  .nav-arrow {
+    background:var(--pistons-card); border:1px solid var(--pistons-border);
+    color:var(--text-mid); width:36px; height:36px; border-radius:8px;
+    cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center;
+    transition:all .2s;
+  }
+  .nav-arrow:hover { background:var(--pistons-blue); border-color:var(--pistons-blue); color:#fff; }
+  .nav-arrow:disabled { opacity:.3; cursor:default; }
+
+  /* calendar */
+  .calendar-wrap { padding:12px 12px 20px; }
+  .weekdays { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:4px; }
+  .weekday { text-align:center; font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; color:var(--text-dim); padding:4px 0; text-transform:uppercase; }
+  .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-day {
+    aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:600;
+    cursor:default; position:relative; transition:all .2s;
+    background:transparent; color:var(--text-dim); user-select:none;
+  }
+  .cal-day.game-normal { background:var(--pistons-card); border:1px solid var(--pistons-border); color:var(--text-bright); cursor:pointer; }
+  .cal-day.game-normal:hover { border-color:var(--pistons-blue); background:#162040; }
+  .cal-day.game-extended {
+    background:linear-gradient(135deg,#1a0a1e,#2d1040);
+    border:1.5px solid var(--pistons-red); color:var(--text-bright); cursor:pointer;
+  }
+  .cal-day.game-extended::after {
+    content:''; position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+    width:5px; height:5px; background:var(--pistons-red); border-radius:50%;
+  }
+  .cal-day.game-cancelled { background:var(--pistons-card); border:1px solid #333; color:var(--text-dim); cursor:pointer; opacity:.6; }
+  .cal-day.game-cancelled > span { text-decoration:line-through; }
+  .cal-day.game-cancelled::after { content:'✕'; position:absolute; font-size:18px; color:#555; font-family:'Barlow Condensed',sans-serif; font-weight:700; }
+  .cal-day.today-game {
+    background:linear-gradient(135deg,var(--pistons-blue),#0053a0);
+    border:2px solid #fff !important; color:#fff !important;
+    box-shadow:0 0 16px rgba(0,107,182,.6); font-size:16px;
+  }
+  .cal-day.today-game::after { display:none !important; }
+  .cal-day.today-no-game { border:1.5px solid rgba(255,255,255,.25) !important; color:var(--text-bright) !important; }
+  .cal-day.next-game-day { border:2px solid #4ade80 !important; color:var(--text-bright) !important; box-shadow:0 0 10px rgba(74,222,128,.3); }
+  .cal-day.next-game-day::before { content:''; position:absolute; top:3px; right:3px; width:5px; height:5px; background:#4ade80; border-radius:50%; }
+  .cal-day.past-game { opacity:.35; cursor:default !important; }
+  .game-time-badge { font-size:8px; font-family:'Barlow Condensed',sans-serif; font-weight:600; letter-spacing:.3px; color:var(--pistons-gold); margin-top:1px; line-height:1; }
+  .game-extended .game-time-badge { color:#f87171; }
+  .today-game .game-time-badge { color:rgba(255,255,255,.8); }
+
+  /* legend */
+  .legend { padding:0 12px 16px; display:flex; flex-wrap:wrap; gap:10px; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; font-family:'Barlow Condensed',sans-serif; color:var(--text-mid); letter-spacing:.3px; }
+  .legend-dot { width:12px; height:12px; border-radius:3px; }
+  .ld-today { background:var(--pistons-blue); border:1.5px solid #fff; }
+  .ld-next { border:1.5px solid #4ade80; background:var(--pistons-card); }
+  .ld-normal { background:var(--pistons-card); border:1px solid var(--pistons-border); }
+  .ld-extended { background:linear-gradient(135deg,#1a0a1e,#2d1040); border:1.5px solid var(--pistons-red); }
+  .ld-cancelled { background:var(--pistons-card); border:1px solid #333; opacity:.5; }
+
+  /* admin overlay */
+  .admin-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:flex-end; backdrop-filter:blur(4px); }
+  .admin-overlay.show { display:flex; }
+  .admin-panel { background:var(--pistons-panel); border:1px solid var(--pistons-border); border-radius:20px 20px 0 0; padding:20px; width:100%; animation:slideUp .25s ease; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .admin-panel h3 { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; margin-bottom:6px; color:var(--pistons-gold); }
+  .admin-date-label { font-size:13px; color:var(--text-mid); margin-bottom:16px; font-family:'Barlow Condensed',sans-serif; letter-spacing:.5px; }
+  .admin-options { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+  .admin-option { display:flex; align-items:center; gap:12px; padding:14px; border-radius:12px; border:1.5px solid var(--pistons-border); cursor:pointer; transition:all .2s; background:var(--pistons-card); }
+  .admin-option:hover { border-color:var(--pistons-blue); }
+  .admin-option.selected { border-color:var(--pistons-blue); background:rgba(0,107,182,.2); }
+  .opt-extended:hover,.opt-extended.selected { border-color:var(--pistons-red) !important; background:rgba(237,23,76,.15) !important; }
+  .opt-cancel:hover,.opt-cancel.selected { border-color:#555 !important; background:rgba(80,80,80,.2) !important; }
+  .opt-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .opt-normal .opt-icon { background:rgba(0,107,182,.2); }
+  .opt-extended .opt-icon { background:rgba(237,23,76,.2); }
+  .opt-cancel .opt-icon { background:rgba(80,80,80,.2); }
+  .opt-text { flex:1; }
+  .opt-title { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; letter-spacing:.5px; color:var(--text-bright); }
+  .opt-sub { font-size:12px; color:var(--text-mid); margin-top:2px; }
+  .saving-indicator { text-align:center; font-size:12px; color:var(--pistons-gold); font-family:'Barlow Condensed',sans-serif; margin-bottom:10px; display:none; }
+  .saving-indicator.show { display:block; }
+  .admin-close { width:100%; padding:13px; background:var(--pistons-card); border:1px solid var(--pistons-border); color:var(--text-mid); border-radius:10px; font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:600; letter-spacing:1px; cursor:pointer; transition:all .2s; }
+  .admin-close:hover { background:#1e2a44; color:var(--text-bright); }
+
+  /* login */
+  .login-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:200; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(6px); }
+  .login-overlay.show { display:flex; }
+  .login-box { background:var(--pistons-panel); border:1px solid var(--pistons-border); border-radius:16px; padding:24px; width:100%; max-width:320px; animation:fadeIn .2s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:scale(.95)} to{opacity:1;transform:scale(1)} }
+  .login-box h3 { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:var(--pistons-gold); margin-bottom:4px; }
+  .login-box p { font-size:13px; color:var(--text-mid); margin-bottom:18px; }
+  .login-input { width:100%; background:var(--pistons-card); border:1.5px solid var(--pistons-border); color:var(--text-bright); padding:12px 14px; border-radius:10px; font-size:16px; font-family:'Barlow',sans-serif; margin-bottom:12px; outline:none; transition:border-color .2s; }
+  .login-input:focus { border-color:var(--pistons-blue); }
+  .login-input.error { border-color:var(--pistons-red); }
+  .login-submit { width:100%; padding:13px; background:var(--pistons-blue); border:none; color:#fff; border-radius:10px; font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all .2s; margin-bottom:10px; }
+  .login-submit:hover { background:#0053a0; }
+  .login-cancel { width:100%; padding:10px; background:transparent; border:1px solid var(--pistons-border); color:var(--text-mid); border-radius:10px; font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:600; cursor:pointer; letter-spacing:.5px; }
+  .err-msg { font-size:12px; color:var(--pistons-red); margin-bottom:10px; display:none; }
+  .err-msg.show { display:block; }
+
+  /* config banner */
+  .config-banner { background:#1a0a0a; border:1px solid var(--pistons-red); border-radius:10px; margin:12px; padding:12px 14px; font-size:12px; color:#f87171; font-family:'Barlow Condensed',sans-serif; line-height:1.6; }
+  .config-banner strong { color:var(--pistons-red); letter-spacing:.5px; }
+  .config-banner code { background:rgba(255,255,255,.1); padding:1px 5px; border-radius:4px; font-family:monospace; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="team-name">
+        <span>25 - 26 Season</span>
+        Northville Basketball
+      </div>
+      <button class="admin-btn" id="adminToggle" onclick="handleAdminClick()">🔒 Admin</button>
+    </div>
+    <div class="next-game" id="nextGameBanner">
+      <div class="next-game-dot"></div>
+      <div class="next-game-text" id="nextGameText">Loading...</div>
+      <div class="next-game-time" id="nextGameTime"></div>
+    </div>
+  </div>
+</header>
+
+<div class="sync-bar">
+  <div class="sync-dot loading" id="syncDot"></div>
+  <span id="syncText">正在连接...</span>
+</div>
+
+<div id="configBanner" style="display:none" class="config-banner">
+  <strong>⚠️ 需要配置</strong><br>
+  请编辑此文件顶部的 <code>JSONBIN_API_KEY</code> 和 <code>JSONBIN_BIN_ID</code>，完成后删除此提示。<br>
+  详见部署教程。
+</div>
+
+<nav class="month-nav">
+  <button class="nav-arrow" id="prevBtn" onclick="changeMonth(-1)">&#8592;</button>
+  <div class="month-title" id="monthTitle"></div>
+  <button class="nav-arrow" id="nextBtn" onclick="changeMonth(1)">&#8594;</button>
+</nav>
+
+<div class="calendar-wrap">
+  <div class="weekdays">
+    <div class="weekday">日</div><div class="weekday">一</div><div class="weekday">二</div>
+    <div class="weekday">三</div><div class="weekday">四</div><div class="weekday">五</div><div class="weekday">六</div>
+  </div>
+  <div class="calendar-grid" id="calendarGrid"></div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot ld-today"></div>今天有球</div>
+  <div class="legend-item"><div class="legend-dot ld-next"></div>最近一场</div>
+  <div class="legend-item"><div class="legend-dot ld-normal"></div>9:15-10:15</div>
+  <div class="legend-item"><div class="legend-dot ld-extended"></div>8:00-10:00</div>
+  <div class="legend-item"><div class="legend-dot ld-cancelled"></div>取消</div>
+</div>
+
+<!-- Admin edit panel -->
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-panel">
+    <h3>编辑场次</h3>
+    <div class="admin-date-label" id="adminDateLabel"></div>
+    <div class="admin-options">
+      <div class="admin-option opt-normal" onclick="setGameStatus('normal')">
+        <div class="opt-icon">🏀</div>
+        <div class="opt-text"><div class="opt-title">正常</div><div class="opt-sub">晚上 9:15 – 10:15</div></div>
+      </div>
+      <div class="admin-option opt-extended" onclick="setGameStatus('extended')">
+        <div class="opt-icon">⏰</div>
+        <div class="opt-text"><div class="opt-title">加长场</div><div class="opt-sub">晚上 8:00 – 10:00</div></div>
+      </div>
+      <div class="admin-option opt-cancel" onclick="setGameStatus('cancelled')">
+        <div class="opt-icon">✕</div>
+        <div class="opt-text"><div class="opt-title">临时取消</div><div class="opt-sub">本场取消</div></div>
+      </div>
+    </div>
+    <div class="saving-indicator" id="savingIndicator">⏳ 保存中...</div>
+    <button class="admin-close" onclick="closeAdminPanel()">关闭</button>
+  </div>
+</div>
+
+<!-- Admin login -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h3>管理员登录</h3>
+    <p>请输入管理员密码</p>
+    <input type="password" class="login-input" id="pwInput" placeholder="密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="err-msg" id="errMsg">密码错误，请重试</div>
+    <button class="login-submit" onclick="doLogin()">进入</button>
+    <button class="login-cancel" onclick="closeLogin()">取消</button>
+  </div>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════╗
+// ║   ⚙️  在这里填入你的 JSONBin 配置         ║
+// ╚══════════════════════════════════════════╝
+const JSONBIN_API_KEY = '$2a$10$y5R7HPcg9rhzldqNhII6OuhMnZ1lMFjwtG9mNgX/UAFgK1v4krykq';
+const JSONBIN_BIN_ID  = '69af50f343b1c97be9c6afb0';
+const ADMIN_PW        = 'nb2526';                     // ← 可以改密码
+
+// ── 检查是否已配置 ──
+const IS_CONFIGURED = !JSONBIN_API_KEY.includes('YOUR') && !JSONBIN_BIN_ID.includes('YOUR');
+if (!IS_CONFIGURED) document.getElementById('configBanner').style.display = 'block';
+
+// ════════════════════════════════════════════
+// BASE SCHEDULE
+// ════════════════════════════════════════════
+const baseSchedule = {};
+function addDates(month, days, type) {
+  days.forEach(d => { baseSchedule[`2026-${month}-${d}`] = type; });
+}
+addDates(1, [5,8,12,15,22,26,29], 'normal');
+addDates(2, [2,5,9,12,19,23,26], 'normal');
+addDates(3, [2,5,9,12,16,19,23,26], 'normal');
+addDates(4, [6,9,13,16,20,23,27,30], 'extended');
+addDates(5, [4,7,11,14,18], 'extended');
+addDates(5, [21,28], 'normal');
+addDates(6, [1,4,8], 'extended');
+
+// ════════════════════════════════════════════
+// JSONBIN API
+// ════════════════════════════════════════════
+let overrides = {};
+let syncOk = false;
+
+async function loadFromBin() {
+  setSyncStatus('loading', '正在同步...');
+  if (!IS_CONFIGURED) {
+    setSyncStatus('err', '未配置 — 仅本地模式');
+    overrides = getLocalOverrides();
+    return;
+  }
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    overrides = data.record?.overrides || {};
+    syncOk = true;
+    setSyncStatus('ok', '已同步 · 实时数据');
+  } catch (e) {
+    overrides = getLocalOverrides();
+    setSyncStatus('err', '离线模式 — 无法连接云端');
+  }
+}
+
+async function saveToBin() {
+  if (!IS_CONFIGURED) { saveLocalOverrides(overrides); return; }
+  document.getElementById('savingIndicator').classList.add('show');
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_API_KEY
+      },
+      body: JSON.stringify({ overrides })
+    });
+    if (!res.ok) throw new Error(res.status);
+    setSyncStatus('ok', '已保存 · ' + new Date().toLocaleTimeString('zh', {hour:'2-digit',minute:'2-digit'}));
+  } catch(e) {
+    saveLocalOverrides(overrides);
+    setSyncStatus('err', '保存失败 — 已写入本地');
+  }
+  document.getElementById('savingIndicator').classList.remove('show');
+}
+
+function setSyncStatus(state, text) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot ' + state;
+  document.getElementById('syncText').textContent = text;
+}
+
+// ── local fallback ──
+function getLocalOverrides() {
+  try { return JSON.parse(localStorage.getItem('nba_overrides') || '{}'); } catch { return {}; }
+}
+function saveLocalOverrides(o) {
+  try { localStorage.setItem('nba_overrides', JSON.stringify(o)); } catch {}
+}
+
+function getGameStatus(dk) {
+  if (overrides[dk]) return overrides[dk];
+  return baseSchedule[dk] || null;
+}
+function getTimeLabel(s) {
+  if (s === 'extended') return '8:00–10:00';
+  if (s === 'normal') return '9:15–10:15';
+  return '';
+}
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let currentMonth = 1;
+let isAdmin = false;
+let editingKey = null;
+const today = new Date();
+const todayKey = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+
+// ════════════════════════════════════════════
+// NEXT GAME
+// ════════════════════════════════════════════
+function findNextGame() {
+  const all = Object.keys(baseSchedule).sort();
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  for (const dk of all) {
+    const s = getGameStatus(dk);
+    if (!s || s === 'cancelled') continue;
+    const [y,m,d] = dk.split('-').map(Number);
+    if (new Date(y,m-1,d) >= t) return {key:dk,year:y,month:m,day:d,status:s};
+  }
+  return null;
+}
+
+function updateBanner() {
+  const next = findNextGame();
+  const textEl = document.getElementById('nextGameText');
+  const timeEl = document.getElementById('nextGameTime');
+  if (!next) { textEl.textContent = '本赛季已结束'; timeEl.textContent = ''; return; }
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const gd = new Date(next.year, next.month-1, next.day);
+  const diff = Math.round((gd - t) / 86400000);
+  const months = ['一','二','三','四','五','六'];
+  const wds = ['周日','周一','周二','周三','周四','周五','周六'];
+  let whenStr;
+  if (diff === 0) whenStr = '今晚有球！';
+  else if (diff === 1) whenStr = `明天 (${months[next.month-1]}月${next.day}日 ${wds[gd.getDay()]})`;
+  else whenStr = `${months[next.month-1]}月${next.day}日 ${wds[gd.getDay()]} · 还有 <strong>${diff}天</strong>`;
+  textEl.innerHTML = whenStr;
+  timeEl.textContent = getTimeLabel(next.status);
+}
+
+// ════════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════════
+const MONTHS = ['一月','二月','三月','四月','五月','六月'];
+
+function renderCalendar() {
+  document.getElementById('monthTitle').textContent = `2026 · ${MONTHS[currentMonth-1]}`;
+  document.getElementById('prevBtn').disabled = currentMonth <= 1;
+  document.getElementById('nextBtn').disabled = currentMonth >= 6;
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  const nextGame = findNextGame();
+  const firstDay = new Date(2026, currentMonth-1, 1).getDay();
+  const daysInMonth = new Date(2026, currentMonth, 0).getDate();
+  for (let i=0; i<firstDay; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+  for (let d=1; d<=daysInMonth; d++) {
+    const dk = `2026-${currentMonth}-${d}`;
+    const status = getGameStatus(dk);
+    const date = new Date(2026, currentMonth-1, d);
+    const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isToday = dk === todayKey;
+    const isNext = nextGame && nextGame.key === dk && !isToday;
+    const el = document.createElement('div');
+    let classes = ['cal-day'];
+    if (status === 'cancelled') {
+      classes.push('game-cancelled');
+      if (isPast) classes.push('past-game');
+    } else if (status) {
+      if (isToday) classes.push('today-game');
+      else if (isNext) classes.push(`game-${status}`, 'next-game-day');
+      else if (isPast) classes.push(`game-${status}`, 'past-game');
+      else classes.push(`game-${status}`);
+    } else {
+      if (isToday) classes.push('today-no-game');
+    }
+    el.className = classes.join(' ');
+    el.innerHTML = `<span>${d}</span>`;
+    if (status && status !== 'cancelled') {
+      const badge = document.createElement('div');
+      badge.className = `game-time-badge game-${status}`;
+      badge.textContent = status === 'extended' ? '8pm' : '9:15';
+      el.appendChild(badge);
+    }
+    if (isAdmin && status) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => openAdminPanel(dk));
+    }
+    grid.appendChild(el);
+  }
+}
+
+function changeMonth(dir) {
+  currentMonth = Math.max(1, Math.min(6, currentMonth + dir));
+  renderCalendar();
+}
+
+// ════════════════════════════════════════════
+// ADMIN
+// ════════════════════════════════════════════
+function handleAdminClick() {
+  if (isAdmin) {
+    isAdmin = false;
+    document.getElementById('adminToggle').textContent = '🔒 Admin';
+    document.getElementById('adminToggle').classList.remove('active');
+    renderCalendar();
+  } else {
+    document.getElementById('loginOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('pwInput').focus(), 100);
+  }
+}
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === ADMIN_PW) {
+    isAdmin = true;
+    document.getElementById('adminToggle').textContent = '🔓 Admin';
+    document.getElementById('adminToggle').classList.add('active');
+    closeLogin();
+    renderCalendar();
+  } else {
+    const inp = document.getElementById('pwInput');
+    inp.classList.add('error');
+    document.getElementById('errMsg').classList.add('show');
+    inp.value = '';
+    setTimeout(() => { inp.classList.remove('error'); document.getElementById('errMsg').classList.remove('show'); }, 2000);
+  }
+}
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('show');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('errMsg').classList.remove('show');
+}
+function openAdminPanel(dk) {
+  if (!isAdmin) return;
+  editingKey = dk;
+  const [,m,d] = dk.split('-');
+  const months = ['一','二','三','四','五','六'];
+  document.getElementById('adminDateLabel').textContent = `${months[parseInt(m)-1]}月 ${d} 日`;
+  const cur = getGameStatus(dk);
+  document.querySelectorAll('.admin-option').forEach(o => o.classList.remove('selected'));
+  if (cur === 'normal') document.querySelector('.opt-normal').classList.add('selected');
+  else if (cur === 'extended') document.querySelector('.opt-extended').classList.add('selected');
+  else if (cur === 'cancelled') document.querySelector('.opt-cancel').classList.add('selected');
+  document.getElementById('adminOverlay').classList.add('show');
+}
+async function setGameStatus(status) {
+  if (!editingKey) return;
+  overrides[editingKey] = status;
+  await saveToBin();
+  closeAdminPanel();
+  renderCalendar();
+  updateBanner();
+}
+function closeAdminPanel() {
+  document.getElementById('adminOverlay').classList.remove('show');
+  editingKey = null;
+}
+document.getElementById('adminOverlay').addEventListener('click', e => { if(e.target===document.getElementById('adminOverlay')) closeAdminPanel(); });
+document.getElementById('loginOverlay').addEventListener('click', e => { if(e.target===document.getElementById('loginOverlay')) closeLogin(); });
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+(async () => {
+  if (today.getFullYear() === 2026) {
+    const m = today.getMonth()+1;
+    if (m >= 1 && m <= 6) currentMonth = m;
+  }
+  await loadFromBin();
+  updateBanner();
+  renderCalendar();
+})();
+</script>
+</body>
+</html>
